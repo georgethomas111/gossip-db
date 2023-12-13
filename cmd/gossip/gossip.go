@@ -3,60 +3,92 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/georgethomas111/gossip-db/pkg/node"
+	"github.com/gorilla/mux"
 )
 
 var portVar = "8080"
-var n *node.Node
+var instance *node.Node
 
 func init() {
 	flag.StringVar(&portVar, "port", portVar, "The port the web browser will be looking for")
 	flag.Parse()
 }
 
-//Displays a paticular file in a folder
-func DispFile(w http.ResponseWriter, r *http.Request) {
-	data, err := ioutil.ReadFile(r.URL.Path[1:])
-	if err == nil {
-		fmt.Fprintf(w, "%s", data)
-	} else {
-		fmt.Fprintf(w, "%s", err.Error())
+func PutKey(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["key"]
+	val := vars["value"]
+	fmt.Fprintln(w, "key = ", key)
+	fmt.Fprintln(w, "val = ", val)
+	instance.Put(key, []byte(val))
+
+}
+
+func GetKey(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["key"]
+	fmt.Fprintln(w, "key = ", key)
+	fmt.Fprintln(w, "Value =", string(instance.Get(key)))
+}
+
+func ListVals(w http.ResponseWriter, r *http.Request) {
+	respVals := instance.ListVals()
+	for _, val := range respVals {
+		fmt.Fprintln(w, string(val))
 	}
 }
 
-// Lists the Files in the current folder.
-func ListFiles(w http.ResponseWriter, r *http.Request) {
-	files, err := ioutil.ReadDir(".")
-	if err == nil {
-		for _, file := range files {
-			fmt.Fprintf(w, "<a href='%s'>%s</a><br/>", file.Name(), file.Name())
+func ListKeys(w http.ResponseWriter, r *http.Request) {
+	respKeys := instance.ListKeys()
+	for _, key := range respKeys {
+		fmt.Fprintln(w, key)
+	}
+}
+
+func routeMap() map[string]func(http.ResponseWriter, *http.Request) {
+	routes := make(map[string]func(http.ResponseWriter, *http.Request))
+
+	routes["/put/{key}/{value}"] = PutKey
+	routes["/get/{key}"] = GetKey
+	routes["/listKeys"] = ListKeys
+	routes["/listVals"] = ListVals
+	return routes
+}
+
+func routeHandler(routes map[string]func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		for path, _ := range routes {
+			fmt.Fprintln(w, path)
 		}
-	} else {
-		fmt.Fprintf(w, "%s", err.Error())
 	}
-}
-
-func Members(w http.ResponseWriter, r *http.Request) {
-	for _, member := range n.Members() {
-		fmt.Fprintf(w, "Member: %s %s\n", member.Name, member.Addr)
-	}
-
 }
 
 func main() {
 	var err error
-	n, err = node.New()
+	instance, err = node.New()
 	if err != nil {
 		panic("Initializing node " + err.Error())
 	}
 
-	http.HandleFunc("/members", Members)
-	http.HandleFunc("/list", ListFiles)
-	http.HandleFunc("/", DispFile)
+	r := mux.NewRouter()
 
-	fmt.Println("Serving files in this director over port ", portVar)
-	http.ListenAndServe(":"+portVar, nil)
+	routes := routeMap()
+
+	r.HandleFunc("/", routeHandler(routes))
+
+	for path, fn := range routes {
+		r.HandleFunc(path, fn)
+	}
+
+	fmt.Println("Serving routes over ", portVar)
+	srv := &http.Server{
+		Addr:    "0.0.0.0:" + portVar,
+		Handler: r,
+	}
+
+	srv.ListenAndServe()
+
 }

@@ -7,16 +7,16 @@ type Node struct {
 	m    sync.Mutex
 }
 
-func (n *Node) Get(key string) {
+func (n *Node) Get(key string) []byte {
 	n.m.Lock()
 	defer n.m.Unlock()
-	data[key] = val
+	return n.data[key]
 }
 
 func (n *Node) Put(key string, val []byte) {
 	n.m.Lock()
 	defer n.m.Unlock()
-	data[key] = val
+	n.data[key] = val
 }
 
 func (n *Node) ListKeys() []string {
@@ -41,8 +41,10 @@ func (n *Node) ListVals() [][]byte {
 }
 
 func New() (*Node, error) {
+	var lock sync.Mutex
 	return &Node{
 		data: make(map[string][]byte),
+		m:    lock,
 	}, nil
 
 }
