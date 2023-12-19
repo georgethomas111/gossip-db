@@ -1,25 +1,28 @@
 package node
 
-import "sync"
+import (
+	"sync"
+)
 
 type Node struct {
-	data map[string][]byte
+	data map[string]*Row
 	m    sync.Mutex
 }
 
-func (n *Node) Get(key string) []byte {
+func (n *Node) Get(key string) *Row {
 	n.m.Lock()
 	defer n.m.Unlock()
 	return n.data[key]
 }
 
 func (n *Node) Put(key string, val []byte) {
+	d := NewRow(val)
 	n.m.Lock()
 	defer n.m.Unlock()
-	n.data[key] = val
+	n.data[key] = d
 }
 
-func (n *Node) ListKeys() []string {
+func (n *Node) listKeys() []string {
 	n.m.Lock()
 	defer n.m.Unlock()
 	var keys []string
@@ -29,22 +32,20 @@ func (n *Node) ListKeys() []string {
 	return keys
 }
 
-func (n *Node) ListVals() [][]byte {
+func (n *Node) listVals() [][]byte {
 	n.m.Lock()
 	defer n.m.Unlock()
 	var vals [][]byte
-	for _, val := range n.data {
-		vals = append(vals, val)
+	for _, row := range n.data {
+		vals = append(vals, row.Value)
 	}
 	return vals
-
 }
 
 func New() (*Node, error) {
 	var lock sync.Mutex
 	return &Node{
-		data: make(map[string][]byte),
+		data: make(map[string]*Row),
 		m:    lock,
 	}, nil
-
 }
