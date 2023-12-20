@@ -1,4 +1,28 @@
-package node
+package gossip
+
+import (
+	"errors"
+
+	"github.com/georgethomas111/gossip-db/pkg/node"
+)
+
+type Client interface {
+	List() (map[string]*node.Row, error)
+}
+
+func Gossip(n *node.Node, client Client) error {
+	listedMap, err := client.List()
+	if err != nil {
+		return errors.New("Gossip client List() failed " + err.Error())
+	}
+
+	for key, row := range listedMap {
+		newRow := node.MergeRows(n.Get(key), row)
+		n.Put(key, newRow)
+	}
+
+	return nil
+}
 
 /*
 import (

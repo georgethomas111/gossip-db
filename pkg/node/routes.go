@@ -13,7 +13,7 @@ func (n *Node) PutKey(w http.ResponseWriter, r *http.Request) {
 	val := vars["value"]
 	fmt.Fprintln(w, "key = ", key)
 	fmt.Fprintln(w, "val = ", val)
-	n.Put(key, []byte(val))
+	n.PutVal(key, []byte(val))
 
 }
 
