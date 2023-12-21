@@ -1,16 +1,21 @@
 package gossip
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/georgethomas111/gossip-db/pkg/node"
 )
+
+var HeartBeatMs = 500
 
 type Client interface {
 	List() (map[string]*node.Row, error)
 }
 
-func Gossip(n *node.Node, client Client) error {
+func Talk(n *node.Node, client Client) error {
 	listedMap, err := client.List()
 	if err != nil {
 		return errors.New("Gossip client List() failed " + err.Error())
@@ -24,52 +29,46 @@ func Gossip(n *node.Node, client Client) error {
 	return nil
 }
 
-/*
-import (
-	"context"
-	"time"
-)
-
-var HeartBeatMs = 500
-
-type Transport interface {
+type Gossip struct {
+	Others    []string
+	Instance  *node.Node
+	HeartBeat *time.Ticker
+	clients   []*JSONClient
 }
 
-//    n1:8080   n2
-//    findOthers
+func New(instance *node.Node, others []string) *Gossip {
+	var t []*JSONClient
 
-// ------------------------------------------------>
-//                   t ->
-
-type distributed struct {
-	node *Node
-}
-
-func Distributed(dnsNodeAddr string) *distributed {
-	return &distributed{
-		dnsNodeAddr:    dnsNodeAddr,
-		heartBeatTimer: time.NewTimer(HeartBeatMs * time.Milliseconds),
+	for _, addr := range others {
+		t = append(t, NewJSONClient(addr))
 	}
-}
 
-// Each node should gossip periodically with a heart beat
-func (d *distributed) Join(ctx context.Context, instance *Node) *Gossip {
-}
+	g := &Gossip{
+		Others:    others,
+		Instance:  instance,
+		HeartBeat: time.NewTicker(time.Duration(HeartBeatMs) * time.Millisecond),
+		clients:   t,
+	}
 
-func (g *Gossip) AddNode(node string) {
-	g.nodeAddresses = append(g.nodeAddresses, node)
+	// context so that graceful shutdowns can be added some day.
+	g.runGossips(context.Background())
+
+	return g
+
 }
 
 func (g *Gossip) runGossips(ctx context.Context) {
 	for {
 		select {
-		case <-g.heartBeatTimer.C:
-			// iterate throught the nodeAddresses
-			// Call the other nodes and fill up the current nodes data
-			return
+		case <-g.HeartBeat.C:
+			for _, c := range g.clients {
+				err := Talk(g.Instance, c)
+				if err != nil {
+					fmt.Println("Error talking to client " + err.Error())
+				}
+			}
 		case <-ctx.Done():
 			return
 		}
 	}
 }
-*/

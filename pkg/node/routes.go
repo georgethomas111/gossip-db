@@ -7,7 +7,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (n *Node) PutKey(w http.ResponseWriter, r *http.Request) {
+const (
+	PutRoute      = "/put/{key}/{value}"
+	GetRoute      = "/get/{key}"
+	ListKeysRoute = "/listKeys"
+	ListValsRoute = "/listVals"
+	ListJSONRoute = "/listJSON"
+)
+
+func (n *Node) PutKeyHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["key"]
 	val := vars["value"]
@@ -17,7 +25,7 @@ func (n *Node) PutKey(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (n *Node) GetKey(w http.ResponseWriter, r *http.Request) {
+func (n *Node) GetKeyHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["key"]
 	fmt.Fprintln(w, "key = ", key)
@@ -32,25 +40,35 @@ func (n *Node) GetKey(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (n *Node) ListVals(w http.ResponseWriter, r *http.Request) {
+func (n *Node) ListValsHandler(w http.ResponseWriter, r *http.Request) {
 	respVals := n.listVals()
 	for _, val := range respVals {
 		fmt.Fprintln(w, string(val))
 	}
 }
 
-func (n *Node) ListKeys(w http.ResponseWriter, r *http.Request) {
+func (n *Node) ListKeysHandler(w http.ResponseWriter, r *http.Request) {
 	respKeys := n.listKeys()
 	for _, key := range respKeys {
 		fmt.Fprintln(w, key)
 	}
 }
 
+func (n *Node) ListJSONHandler(w http.ResponseWriter, r *http.Request) {
+	j, err := n.ListJSON()
+	if err != nil {
+		fmt.Fprintln(w, "Error Listing "+err.Error())
+	}
+	fmt.Fprintln(w, string(j))
+}
+
 func (n *Node) Routes() map[string]func(http.ResponseWriter, *http.Request) {
 	routes := make(map[string]func(http.ResponseWriter, *http.Request))
-	routes["/put/{key}/{value}"] = n.PutKey
-	routes["/get/{key}"] = n.GetKey
-	routes["/listKeys"] = n.ListKeys
-	routes["/listVals"] = n.ListVals
+	routes[PutRoute] = n.PutKeyHandler
+	routes[GetRoute] = n.GetKeyHandler
+	routes[ListKeysRoute] = n.ListKeysHandler
+	routes[ListValsRoute] = n.ListValsHandler
+	routes[ListJSONRoute] = n.ListJSONHandler
+
 	return routes
 }

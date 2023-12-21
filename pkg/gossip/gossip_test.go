@@ -44,7 +44,7 @@ func TestGossip(t *testing.T) {
 		ServerNode: node2,
 	}
 
-	err = Gossip(node1, client)
+	err = Talk(node1, client)
 	if err != nil {
 		t.Error("Error Gossiping ", err.Error())
 		return
