@@ -10,9 +10,6 @@ On your browser go to http://localhost:8080/ to see the options and data that is
 
 # README
 
-* First create a simple map with put and get with endpoints that can achieve it. 
-* The endpoints listen on ports and has two versions of it.
-* Add gossip package with handcoded list of members.
 
 Gossiping works
 
@@ -50,3 +47,19 @@ Value =  787
 PutTimestamp =  2023-12-20 20:18:55.201666149 -0800 PST
 george@pop-os:~/workspace/gossip-db$ 
 ```
+
+# TODOs
+
+* First create a simple map with put and get with endpoints that can achieve it. 
+* The endpoints listen on ports and has two versions of it.
+* Add gossip package with handcoded list of members.
+>> Done
+
+
+* Add a way for merges to work with gossiping.
+
+Gossiping is great but when you have same data coming from two nodes what should be the resulting data stored?
+* Pick latest
+
+* Testing at scale.
+* CI
