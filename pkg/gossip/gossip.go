@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/georgethomas111/gossip-db/pkg/node"
+	"github.com/georgethomas111/gossip-db/pkg/stats"
 )
 
 var HeartBeatMs = 500
@@ -26,6 +27,8 @@ func Talk(n *node.Node, client Client) error {
 		n.Put(key, newRow)
 	}
 
+	stats.RowsInDatabase.Set(float64(len(listedMap)))
+
 	return nil
 }
 
@@ -39,6 +42,7 @@ type Gossip struct {
 func New(instance *node.Node, others []string) *Gossip {
 	var t []*JSONClient
 
+	stats.NodeCount.Set(float64(len(others)))
 	for _, addr := range others {
 		t = append(t, NewJSONClient(addr))
 	}

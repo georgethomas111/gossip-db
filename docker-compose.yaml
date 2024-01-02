@@ -3,6 +3,7 @@ services:
     build: .
     ports: 
       - "8002:8000"
+      - "10002:10000"
     command: ["./gossip", "-firstNode=true"]
 
   node-connect-1:
@@ -10,4 +11,5 @@ services:
     depends_on: ["node-known"]
     ports: 
       - "8003:8000"
+      - "10003:10000"
     command: ["./gossip"]

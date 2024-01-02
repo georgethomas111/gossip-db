@@ -7,6 +7,7 @@ import (
 
 	"github.com/georgethomas111/gossip-db/pkg/gossip"
 	"github.com/georgethomas111/gossip-db/pkg/node"
+	"github.com/georgethomas111/gossip-db/pkg/stats"
 	"github.com/georgethomas111/gossip-db/pkg/swim"
 	"github.com/gorilla/mux"
 )
@@ -22,6 +23,7 @@ func init() {
 	flag.IntVar(&portVar, "port", portVar, "The port the web browser will be looking for. Swim port will be 1000 less than this.")
 	flag.BoolVar(&swim.FirstNode, "firstNode", swim.FirstNode, "Boolean indicating if this is the known node.")
 	flag.StringVar(&known, "known", known, "The Address of the known node. Swim port will be 1000 less than this.")
+
 	flag.Parse()
 }
 
@@ -77,6 +79,7 @@ func main() {
 	}
 	fmt.Println("Address of nodes = ", others)
 	go gossip.New(instance, others)
+	go stats.New()
 
 	srv.ListenAndServe()
 }
