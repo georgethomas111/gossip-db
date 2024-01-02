@@ -55,7 +55,6 @@ george@pop-os:~/workspace/gossip-db$
 * Add gossip package with handcoded list of members.
 >> Done
 
-
 * Add a way for merges to work with gossiping.
 
 Gossiping is great but when you have same data coming from two nodes what should be the resulting data stored?

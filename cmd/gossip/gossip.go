@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/georgethomas111/gossip-db/pkg/gossip"
+	member "github.com/georgethomas111/gossip-db/pkg/members"
 	"github.com/georgethomas111/gossip-db/pkg/node"
 	"github.com/gorilla/mux"
 )
 
-var portVar = "8080"
-var otherPort = "8081"
+const DefaultPortVar = 8000
+
+var swimPortDiff = 1000
+var portVar = DefaultPortVar
+
 var instance *node.Node
 
 func init() {
-	flag.StringVar(&portVar, "port", portVar, "The port the web browser will be looking for")
-	flag.StringVar(&otherPort, "other", otherPort, "The port of the other port that is listening")
+	flag.IntVar(&portVar, "port", portVar, "The port the web browser will be looking for. Swim port will be 1000 less than this.")
+	flag.IntVar(&swimPortDiff, "swimPortDiff", swimPortDiff, "Swim port will be 1000 less by default. Change this to change the difference.")
 	flag.Parse()
 }
 
@@ -35,7 +38,23 @@ func routeHandler(routes map[string]func(http.ResponseWriter, *http.Request)) fu
 	}
 }
 
+func otherAddresses(swimPorts []int) []string {
+	var others []string
+	for _, swimPort := range swimPorts {
+		nodePort := swimPort + swimPortDiff
+		if nodePort != portVar {
+			otherAddr := "0.0.0.0" + fmt.Sprintf(":%d", nodePort)
+			others = append(others, otherAddr)
+		}
+	}
+	return others
+}
+
 func main() {
+	// Let swim port be always SwimPortDiff less to start with.
+	swimPort := portVar - swimPortDiff
+	knownSwimPort := DefaultPortVar - swimPortDiff
+
 	var err error
 	instance, err = node.New()
 	if err != nil {
@@ -50,17 +69,22 @@ func main() {
 		r.HandleFunc(path, fn)
 	}
 
+	swimPorts, err := member.NewSwim(swimPort, knownSwimPort)
+	if err != nil {
+		panic("Swim could not be started " + err.Error())
+	}
+
 	srv := &http.Server{
-		Addr:    "0.0.0.0:" + portVar,
+		Addr:    "0.0.0.0:" + fmt.Sprintf("%d", portVar),
 		Handler: r,
 	}
 	srvAddr := srv.Addr
 	fmt.Println("Serving routes over ", srvAddr)
+	fmt.Println("Swim port at  ", swimPort)
 
-	otherAddr := "0.0.0.0:" + otherPort
-
-	var others []string = []string{otherAddr}
-	go gossip.New(instance, others)
+	others := otherAddresses(swimPorts)
+	fmt.Println("Address of other nodes = ", others)
+	//	go gossip.New(instance, others)
 
 	srv.ListenAndServe()
 }
