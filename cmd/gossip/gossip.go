@@ -5,21 +5,22 @@ import (
 	"fmt"
 	"net/http"
 
-	member "github.com/georgethomas111/gossip-db/pkg/members"
 	"github.com/georgethomas111/gossip-db/pkg/node"
+	"github.com/georgethomas111/gossip-db/pkg/swim"
 	"github.com/gorilla/mux"
 )
 
 const DefaultPortVar = 8000
+const swimPortDiff = 1000
 
-var swimPortDiff = 1000
 var portVar = DefaultPortVar
-
 var instance *node.Node
+var known = "node-known:7000"
 
 func init() {
 	flag.IntVar(&portVar, "port", portVar, "The port the web browser will be looking for. Swim port will be 1000 less than this.")
-	flag.IntVar(&swimPortDiff, "swimPortDiff", swimPortDiff, "Swim port will be 1000 less by default. Change this to change the difference.")
+	flag.BoolVar(&swim.FirstNode, "firstNode", swim.FirstNode, "Boolean indicating if this is the known node.")
+	flag.StringVar(&known, "known", known, "The Address of the known node. Swim port will be 1000 less than this.")
 	flag.Parse()
 }
 
@@ -38,9 +39,10 @@ func routeHandler(routes map[string]func(http.ResponseWriter, *http.Request)) fu
 	}
 }
 
-func otherAddresses(swimPorts []int) []string {
+/*
+func otherAddresses(otherNodes []string) []string {
 	var others []string
-	for _, swimPort := range swimPorts {
+	for _, addr := range otherNodes {
 		nodePort := swimPort + swimPortDiff
 		if nodePort != portVar {
 			otherAddr := "0.0.0.0" + fmt.Sprintf(":%d", nodePort)
@@ -49,11 +51,11 @@ func otherAddresses(swimPorts []int) []string {
 	}
 	return others
 }
+*/
 
 func main() {
 	// Let swim port be always SwimPortDiff less to start with.
 	swimPort := portVar - swimPortDiff
-	knownSwimPort := DefaultPortVar - swimPortDiff
 
 	var err error
 	instance, err = node.New()
@@ -69,7 +71,7 @@ func main() {
 		r.HandleFunc(path, fn)
 	}
 
-	swimPorts, err := member.NewSwim(swimPort, knownSwimPort)
+	otherNodes, err := swim.New(swimPort, known)
 	if err != nil {
 		panic("Swim could not be started " + err.Error())
 	}
@@ -82,8 +84,8 @@ func main() {
 	fmt.Println("Serving routes over ", srvAddr)
 	fmt.Println("Swim port at  ", swimPort)
 
-	others := otherAddresses(swimPorts)
-	fmt.Println("Address of other nodes = ", others)
+	//	others := otherAddresses(otherNodes)
+	fmt.Println("Address of nodes = ", otherNodes)
 	//	go gossip.New(instance, others)
 
 	srv.ListenAndServe()

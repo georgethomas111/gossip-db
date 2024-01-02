@@ -9,4 +9,4 @@ RUN go mod download && go mod verify
 COPY . .
 RUN make build
 
-CMD ["./gossip"]
+CMD ["./gossip", "firstNode=true"]

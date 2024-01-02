@@ -3,10 +3,10 @@ services:
     build: .
     ports: 
       - "8002:8000"
+    command: ["./gossip", "-firstNode=true"]
 
   node-connect-1:
     build: .
     ports: 
       - "8003:8000"
-
-
+    command: ["./gossip"]

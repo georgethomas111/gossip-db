@@ -1,4 +1,4 @@
-package member
+package swim
 
 import (
 	"fmt"
@@ -6,7 +6,9 @@ import (
 	"github.com/hashicorp/memberlist"
 )
 
-func NewSwim(port int, knownSwim int) ([]int, error) {
+var FirstNode = false
+
+func New(port int, known string) ([]string, error) {
 	c := memberlist.DefaultLocalConfig()
 	c.BindPort = port
 
@@ -15,8 +17,7 @@ func NewSwim(port int, knownSwim int) ([]int, error) {
 		return nil, err
 	}
 
-	known := c.BindAddr + fmt.Sprintf(":%d", knownSwim)
-	if port != 7000 {
+	if FirstNode == false {
 		s, err := list.Join([]string{known})
 		if err != nil {
 			return nil, err
@@ -24,11 +25,12 @@ func NewSwim(port int, knownSwim int) ([]int, error) {
 		fmt.Println("Known = ", known, " s =", s)
 	}
 
-	var swimPorts []int
+	var others []string
 	members := list.Members()
+	fmt.Println("members =", members)
 	for _, m := range members {
-		swimPorts = append(swimPorts, int(m.Port))
+		others = append(others, m.Addr.String())
 
 	}
-	return swimPorts, nil
+	return others, nil
 }

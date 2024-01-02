@@ -2,4 +2,4 @@ build:
 	go build cmd/gossip/gossip.go
 
 compose:
-	docker compose up
+	docker compose up --force-recreate --build
