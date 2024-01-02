@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/georgethomas111/gossip-db/pkg/gossip"
 	"github.com/georgethomas111/gossip-db/pkg/node"
 	"github.com/georgethomas111/gossip-db/pkg/swim"
 	"github.com/gorilla/mux"
@@ -39,20 +40,6 @@ func routeHandler(routes map[string]func(http.ResponseWriter, *http.Request)) fu
 	}
 }
 
-/*
-func otherAddresses(otherNodes []string) []string {
-	var others []string
-	for _, addr := range otherNodes {
-		nodePort := swimPort + swimPortDiff
-		if nodePort != portVar {
-			otherAddr := "0.0.0.0" + fmt.Sprintf(":%d", nodePort)
-			others = append(others, otherAddr)
-		}
-	}
-	return others
-}
-*/
-
 func main() {
 	// Let swim port be always SwimPortDiff less to start with.
 	swimPort := portVar - swimPortDiff
@@ -84,9 +71,12 @@ func main() {
 	fmt.Println("Serving routes over ", srvAddr)
 	fmt.Println("Swim port at  ", swimPort)
 
-	//	others := otherAddresses(otherNodes)
-	fmt.Println("Address of nodes = ", otherNodes)
-	//	go gossip.New(instance, others)
+	var others []string
+	for _, addr := range otherNodes {
+		others = append(others, addr+":"+fmt.Sprintf("%d", portVar))
+	}
+	fmt.Println("Address of nodes = ", others)
+	go gossip.New(instance, others)
 
 	srv.ListenAndServe()
 }
