@@ -1,0 +1,12 @@
+services:
+  node-known:
+    build: .
+    ports: 
+      - "8002:8000"
+
+  node-connect-1:
+    build: .
+    ports: 
+      - "8003:8000"
+
+

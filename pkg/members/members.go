@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/memberlist"
 )
 
-func NewSwim(port int, knownSwin int) ([]int, error) {
+func NewSwim(port int, knownSwim int) ([]int, error) {
 	c := memberlist.DefaultLocalConfig()
 	c.BindPort = port
 
@@ -15,6 +15,7 @@ func NewSwim(port int, knownSwin int) ([]int, error) {
 		return nil, err
 	}
 
+	known := c.BindAddr + fmt.Sprintf(":%d", knownSwim)
 	if port != 7000 {
 		s, err := list.Join([]string{known})
 		if err != nil {
