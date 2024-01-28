@@ -3,15 +3,22 @@
 ```
 // Expose the current directory over the browser.
 $ go run cmd/gossip/gossip.go
-
 ```
 
 On your browser go to http://localhost:8080/ to see the options and data that is present.
 
 # README
 
-
 Gossiping works
+
+# Using docker compose
+
+```
+$ make compose
+
+```
+
+Sometimes sudo might be required to start docker on the machine.
 
 # Proof it works.
 Run one node at 8081 gossiping with 8080

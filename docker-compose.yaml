@@ -13,3 +13,14 @@ services:
       - "8003:8000"
       - "10003:10000"
     command: ["./gossip"]
+
+  node-connect-2:
+    build: .
+    depends_on: ["node-known"]
+    ports: 
+      - "8004:8000"
+      - "10004:10000"
+    command: ["./gossip"]
+
+  prometheus:
+    image: "prom/prometheus"
